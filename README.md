@@ -1,9 +1,4 @@
-### Global Energy Price Data Engineering Platform Project Explanation Guide
-
-> **Audience:** Data Engineering graduates building a portfolio-ready, production-style project.  
-> **Important:** This guide explains *what to build, why it matters, and how each part should work* so you can implement it yourselves. It is intentionally instructional and not a done-for-you codebase.
-
----
+### Global Energy Price Data Engineering Platform Project Explanation Guide.  
 
 #### 1) Project Overview
 
