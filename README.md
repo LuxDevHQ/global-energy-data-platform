@@ -1,11 +1,11 @@
-# Global Energy Price Data Platform — Student Project Explanation Guide
+### Global Energy Price Data Engineering Platform Project Explanation Guide
 
 > **Audience:** Data Engineering graduates building a portfolio-ready, production-style project.  
 > **Important:** This guide explains *what to build, why it matters, and how each part should work* so you can implement it yourselves. It is intentionally instructional and not a done-for-you codebase.
 
 ---
 
-## 1) Project Overview
+#### 1) Project Overview
 
 The **Global Energy Price Data Platform** is an end-to-end data engineering project that simulates a real analytics backend for an energy intelligence startup.
 
@@ -21,7 +21,7 @@ This project demonstrates the complete lifecycle expected from a data engineer:
 
 ---
 
-## 2) Business Problem (Why this exists)
+#### 2) Business Problem (Why this exists)
 
 Energy prices are highly dynamic and influence:
 - household cost of living,
@@ -40,18 +40,18 @@ Your project solves this by creating a **repeatable, observable, and scalable pi
 
 ---
 
-## 3) Data Source Explanation
+#### 3) Data Source Explanation
 
-### Primary source
+##### Primary source
 - **Global Petrol Prices API**: https://www.globalpetrolprices.com/data_access.php
 
-### What you should expect
+##### What you should expect
 Depending on subscription and endpoint access, the provider may expose data in:
 - XML,
 - Excel files,
 - or other structured payloads.
 
-### Expected fields (conceptually)
+##### Expected fields (conceptually)
 Your ingestion layer should normalize fields such as:
 - `country`
 - `product_type` (fuel / electricity / natural_gas)
@@ -62,7 +62,7 @@ Your ingestion layer should normalize fields such as:
 - `source`
 - metadata (request timestamp, batch id)
 
-### Historical vs Incremental
+##### Historical vs Incremental
 - **Historical load**: bulk backfill for older dates.
 - **Incremental load**: only new/updated records since last successful run.
 
@@ -70,7 +70,7 @@ A robust design supports both.
 
 ---
 
-## 4) High-Level Architecture (Text Walkthrough)
+#### 4) High-Level Architecture (Text Walkthrough)
 
 You should structure the system in this logical sequence:
 
@@ -90,7 +90,7 @@ Think in zones:
 
 ---
 
-## 5) Technology Stack (and why)
+#### 5) Technology Stack (and why)
 
 - **Python**: ecosystem maturity for data APIs, ETL, orchestration.
 - **Requests / lxml / openpyxl / pandas**: robust parsing + transformation stack.
@@ -103,7 +103,7 @@ This combination mirrors common startup-scale and mid-size production environmen
 
 ---
 
-## 6) Recommended Project Structure (What each part should do)
+#### 6) Recommended Project Structure (What each part should do)
 
 Use this as your target scaffold:
 
@@ -136,7 +136,7 @@ project_root/
 └── README.md
 ```
 
-### Folder intent
+##### Folder intent
 - `app/ingestion`: API client + response parsing + ingestion metadata.
 - `app/transformation`: field normalization, date formatting, schema mapping.
 - `app/validation`: data quality rules and structured results.
@@ -150,7 +150,7 @@ project_root/
 
 ---
 
-## 7) MongoDB Data Modeling Strategy
+#### 7) MongoDB Data Modeling Strategy
 
 Create these collections:
 
@@ -173,12 +173,12 @@ Every price record should carry:
 - `ingestion_timestamp`
 - `batch_id`
 
-### Why split by product collections?
+##### Why split by product collections?
 - Faster product-specific queries.
 - Cleaner index strategy.
 - Easier operational ownership for downstream reporting.
 
-### Suggested indexes
+##### Suggested indexes
 - On curated collections:
   - `(country, reporting_date, product_type)` compound index
   - `batch_id` index for traceability
@@ -187,7 +187,7 @@ Every price record should carry:
 - On metadata collections:
   - `pipeline_run_id`, `dag_run_id`, `created_at`
 
-### Deduplication key idea
+##### Deduplication key idea
 Use a deterministic business key, e.g.:
 `country + product_type + reporting_date + unit + source`
 
@@ -195,7 +195,7 @@ Perform upsert/merge behavior so reruns are idempotent.
 
 ---
 
-## 8) Airflow Orchestration Design
+#### 8) Airflow Orchestration Design
 
 Your DAG should represent a strict data lifecycle:
 
@@ -205,20 +205,20 @@ Your DAG should represent a strict data lifecycle:
 4. `load_to_mongodb`
 5. `generate_report`
 
-### Production-ready expectations
+##### Production-ready expectations
 - retries + retry delay,
 - task-level logging,
 - failure visibility,
 - run metadata written to `pipeline_runs`,
 - quality outcomes stored in `data_quality_checks`.
 
-### Scheduling idea
+#### Scheduling idea
 - daily runs (or hourly for near-real-time scenarios),
 - parameterized backfill for historical loads.
 
 ---
 
-## 9) Data Quality Strategy
+#### 9) Data Quality Strategy
 
 At minimum, enforce these checks:
 - **Null checks** on required fields,
@@ -237,7 +237,7 @@ Quality results must be stored for auditability and future observability dashboa
 
 ---
 
-## 10) Reporting Layer Design (24-hour summary)
+#### 10) Reporting Layer Design (24-hour summary)
 
 Build a reporting service that computes:
 - latest available snapshot per product,
@@ -249,14 +249,14 @@ This can be served by Flask endpoints and displayed in HTML tables.
 
 ---
 
-## 11) Flask Dashboard Overview
+#### 11) Flask Dashboard Overview
 
-### Expected routes
+##### Expected routes
 - `/` → dashboard page (HTML/CSS)
 - `/api/prices` → latest curated prices (JSON)
 - `/api/report` → 24-hour summary (JSON)
 
-### UI should include
+##### UI should include
 - **Latest Prices table**,
 - **24-hour Summary section**,
 - **Pipeline status highlights** (optional but recommended).
@@ -265,7 +265,7 @@ Keep the UI simple and readable; your value is data correctness and clarity.
 
 ---
 
-## 12) Setup Guide (What students should implement)
+#### 12) Setup Guide (What students should implement)
 
 > This section explains the setup flow you should include in your final implementation docs.
 
@@ -276,26 +276,28 @@ Keep the UI simple and readable; your value is data correctness and clarity.
 - Access credentials for Global Petrol Prices API
 
 ### B) Environment variables
+
 Create `.env` from `.env.example` and define:
 - `MONGODB_URI`
 - `API_USERNAME`
 - `API_PASSWORD`
 - `DATABASE_NAME`
 
-### C) MongoDB Atlas setup
+##### C) MongoDB Atlas setup
+
 1. Create cluster.
 2. Create DB user with least-privilege access.
 3. Add IP access (or temporary open for dev only).
 4. Copy connection string.
 5. Set connection string in `MONGODB_URI`.
 
-### D) Airflow local run (conceptual)
+##### D) Airflow local run (conceptual)
 - initialize metadata DB,
 - create admin user,
 - start scheduler + webserver,
 - enable your DAG and trigger.
 
-### E) Flask local run (conceptual)
+##### E) Flask local run (conceptual)
 - install dependencies,
 - set env vars,
 - run app,
@@ -303,9 +305,9 @@ Create `.env` from `.env.example` and define:
 
 ---
 
-## 13) Sample API / Query Expectations
+#### 13) Sample API / Query Expectations
 
-### Example `/api/prices` response shape
+##### Example `/api/prices` response shape
 ```json
 {
   "as_of": "2026-04-20T00:00:00Z",
@@ -322,7 +324,7 @@ Create `.env` from `.env.example` and define:
 }
 ```
 
-### Example `/api/report` response shape
+##### Example `/api/report` response shape
 ```json
 {
   "run_id": "airflow_2026_04_20_01",
@@ -333,7 +335,7 @@ Create `.env` from `.env.example` and define:
 }
 ```
 
-### Example MongoDB queries students should support
+##### Example MongoDB queries students should support
 - latest price by country + product,
 - 24-hour delta by country,
 - pipeline run audit by date,
@@ -341,7 +343,7 @@ Create `.env` from `.env.example` and define:
 
 ---
 
-## 14) Testing Strategy (What to prove)
+#### 14) Testing Strategy (What to prove)
 
 Students should implement:
 - **Unit tests** for transformation and validation functions.
@@ -353,7 +355,7 @@ Focus on correctness + idempotency + traceability.
 
 ---
 
-## 15) Limitations to Discuss in Final Submission
+#### 15) Limitations to Discuss in Final Submission
 
 Common realistic limitations:
 - API access quota or latency,
@@ -366,7 +368,7 @@ Showing limitations demonstrates engineering maturity.
 
 ---
 
-## 16) Future Improvements (Roadmap thinking)
+#### 16) Future Improvements (Roadmap thinking)
 
 Strong next steps:
 - add Great Expectations / Soda for richer data quality,
@@ -378,7 +380,7 @@ Strong next steps:
 
 ---
 
-## 17) What Recruiters / Reviewers Look For
+#### 17) What Recruiters / Reviewers Look For
 
 When graduates present this project, reviewers care less about UI polish and more about:
 - clear data contracts,
@@ -392,7 +394,7 @@ If you can explain trade-offs and operational behavior, you will stand out.
 
 ---
 
-## 18) Final Guidance for Students
+#### 18) Final Guidance for Students
 
 Build this project in iterations:
 1. working ingestion,
@@ -404,10 +406,4 @@ Build this project in iterations:
 
 Do not rush to “finish features.” Prioritize **data reliability** and **explainability**.
 
-If someone asks “Why did you build it this way?”, you should always have a reason tied to:
-- maintainability,
-- scalability,
-- observability,
-- and data trust.
 
-That is the mindset of a production data engineer.
